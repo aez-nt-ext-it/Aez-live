@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AEZ Live - Workspace</title>
+  
+  <link rel="stylesheet" href="tailwind.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="reports.css">
+</head>
+<body class="flex items-start justify-center min-h-screen p-4 text-slate-800 custom-gradient">
+
+  <div id="loginScreen" class="w-full max-w-md mt-10 transition-all duration-500">
+    <div class="glass-card p-8 rounded-2xl text-center">
+      <img class="brand-logo brand-logo-login" src="aez-logo.jpg" alt="AEZ-NT Learner's" width="1254" height="1254">
+      <h2 class="text-2xl font-bold mb-2 text-[#0b3d4f]">AEZ Live</h2>
+      <p class="text-slate-500 text-sm mb-8">Sign in securely to your workspace</p>
+
+      <div id="googleButtonContainer" class="flex justify-center mb-4"></div>
+      <p id="loginStatus" role="status" class="text-sm text-slate-500">Loading sign-in...</p>
+      <button id="loginRetry" type="button" onclick="initializeApp()" class="hidden text-sm font-semibold text-teal-700 mt-3">Retry</button>
+      <p class="text-[11px] text-slate-400 mt-4 pt-4 border-t section-divider">Authorized personnel only</p>
+    </div>
+  </div>
+
+  <div id="appScreen" class="w-full hidden transition-all duration-500">
+    <div class="glass-card app-shell p-6 rounded-2xl">
+      <div class="app-header flex items-center justify-between mb-6 pb-5 border-b section-divider">
+        <div class="brand-lockup flex items-center gap-3">
+          <img class="brand-logo brand-logo-header" src="aez-logo.jpg" alt="AEZ-NT Learner's" width="1254" height="1254">
+          <div>
+            <h2 class="font-bold text-base leading-tight text-[#0b3d4f]">AEZ Live</h2>
+            <p id="userDisplay" class="text-xs text-slate-500 truncate max-w-[140px]"></p>
+          </div>
+        </div>
+        <div class="header-actions flex items-center gap-2">
+          <button id="adminUsersButton" onclick="openUsers()" class="hidden text-xs font-semibold text-teal-700 px-3 py-1.5">Users</button>
+          <button id="adminReportsButton" onclick="openReports()" class="hidden text-xs font-semibold text-teal-700 px-3 py-1.5">Reports</button>
+          <button onclick="logout()" class="text-xs font-semibold text-slate-500 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg">Sign Out</button>
+        </div>
+      </div>
+
+      <div class="desktop-grid">
+        <div class="control-panel">
+          <div class="flex bg-slate-100 p-1 rounded-lg mb-4">
+            <button id="tabEmp" onclick="switchTab('emp')" class="flex-1 py-2 rounded-md text-sm font-semibold bg-white text-[#0D9488] shadow-sm">Admin/Emp</button>
+            <button id="tabTeach" onclick="switchTab('teach')" class="flex-1 py-2 rounded-md text-sm font-semibold text-slate-500 hover:text-slate-700">Educator</button>
+          </div>
+
+          <div id="controls" class="grid gap-3"></div>
+        </div>
+
+        <div class="dashboard-panel">
+          <div class="dashboard-fixed">
+            <div class="flex justify-between items-center pb-3 border-b section-divider mb-3">
+              <h4 class="font-bold text-sm text-[#0b3d4f] uppercase tracking-wide">Live Dashboard</h4>
+              <div class="flex items-center gap-2 text-xs font-semibold text-emerald-600 uppercase tracking-wider">
+                <div class="w-2 h-2 bg-emerald-500 rounded-full pulse-dot"></div> Live
+              </div>
+            </div>
+            <div id="analyticsStrip" class="analytics-strip mb-4" aria-label="Live dashboard analytics"></div>
+            <div id="dashboardTools" class="dashboard-tools mb-3">
+              <input id="dashboardSearch" type="search" placeholder="Search name or email" autocomplete="off">
+              <div class="tool-row">
+                <select id="statusFilter" aria-label="Status filter">
+                  <option value="all">All statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="On Break">Break</option>
+                  <option value="On Leave">Leave</option>
+                  <option value="Offline">Offline</option>
+                  <option value="Weekoff">Weekoff</option>
+                </select>
+                <select id="leaveViewFilter" aria-label="Leave calendar view">
+                  <option value="today">Today's Leave</option>
+                  <option value="week">Week View</option>
+                  <option value="month">Month View</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div id="leaveCalendar" class="leave-calendar mb-3"></div>
+          <div id="dashboardList" class="dashboard-list space-y-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+  <script src="admin.js"></script>
+
+  <!-- Toast stack (top-right, transient notifications) -->
+  <div id="toastStack" class="fixed top-4 right-4 z-50 flex flex-col gap-2 w-[calc(100%-2rem)] max-w-sm"></div>
+
+  <!-- Modal overlay (confirm / leave form / class form) -->
+  <div id="modalOverlay" class="fixed inset-0 bg-[#0b3d4f]/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div id="modalCard" class="glass-card w-full max-w-sm rounded-2xl p-6"></div>
+  </div>
+</body>
+</html>

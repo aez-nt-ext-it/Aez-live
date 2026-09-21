@@ -1,0 +1,31 @@
+{
+  "name": "aez-live",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:css": "tailwindcss -i ./public/tailwind-input.css -o ./public/tailwind.css --minify",
+    "test:browser": "node scripts/browser-check.js",
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "test": "node --test --test-concurrency=1",
+    "seed": "node --env-file-if-exists=.env scripts/seed.js",
+    "import": "node --env-file-if-exists=.env scripts/import.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.0",
+    "csv-parse": "^6.0.0",
+    "exceljs": "^4.4.0",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.0.0",
+    "google-auth-library": "^10.0.0",
+    "nodemailer": "^7.0.0",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "tailwindcss": "^3.4.17"
+  }
+}

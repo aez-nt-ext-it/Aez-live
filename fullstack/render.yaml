@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: aez-live
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build:css
+    startCommand: npm run seed && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3100
+      - key: APP_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: PGSSLROOTCERT_CONTENT
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: SUMMARY_RECIPIENTS
+        sync: false
