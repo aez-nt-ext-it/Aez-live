@@ -1,0 +1,1 @@
+AEZ Live is a full-stack workspace tracker for AEZ-NT Learner's. It supports secure Google OAuth login, admin-managed employee and educator accounts, attendance login/logout, breaks, leave proof uploads, educator class sessions, auto class expiry, daily/monthly reports, CSV/XLSX exports, Supabase PostgreSQL storage, and SMTP daily summary emails.
