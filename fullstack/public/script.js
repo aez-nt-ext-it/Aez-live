@@ -112,21 +112,22 @@ async function initializeApp() {
     document.getElementById('loginRetry').classList.add('hidden');
     document.getElementById('loginStatus').textContent = 'Loading sign-in...';
     try {
-        const response = await fetch('/api/config', {signal: AbortSignal.timeout(45000)});
+        fetch('/health', {cache:'no-store'}).catch(() => {});
+        const response = await fetch('/api/config', {cache:'no-store', signal: AbortSignal.timeout(12000)});
         if (!response.ok || !response.headers.get('content-type')?.includes('application/json')) throw new Error('connection');
         const config = await response.json();
         if (!config.googleClientId) throw new Error('configuration');
         GOOGLE_CLIENT_ID = config.googleClientId;
         await restoreSession();
     } catch (error) {
-        document.getElementById('loginStatus').textContent = 'AEZ Live is taking longer to wake up. Please wait 30 seconds and tap Retry.';
+        document.getElementById('loginStatus').textContent = 'Server is waking up. Tap Retry to connect again.';
         document.getElementById('loginRetry').classList.remove('hidden');
     }
 }
 document.addEventListener('DOMContentLoaded', initializeApp);
 
 async function restoreSession() {
-    const response = await fetch('/api/auth/me', {signal: AbortSignal.timeout(45000)});
+    const response = await fetch('/api/auth/me', {cache:'no-store', signal: AbortSignal.timeout(12000)});
     if (response.status === 401) { renderGoogleButton(); return; }
     if (!response.ok) throw new Error('Could not check session');
     const user = await response.json();
