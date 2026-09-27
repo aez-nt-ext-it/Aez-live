@@ -34,25 +34,22 @@ Reports include quick Today / This Month cards, employee-specific monthly summar
 - Undo works for ten seconds and only for the latest unchanged profile version. Events remain auditable; undone sessions are excluded from reports.
 - Database transactions serialize state changes. Mutation request IDs prevent replay of the same request.
 
-## Email and jobs
+## Cron maintenance
 
-Configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS and MAIL_FROM. SUMMARY_RECIPIENTS overrides the enabled admin recipient list. Production daily summaries should be triggered by an external cron calling `POST /api/cron/daily-summary` with `Authorization: Bearer $CRON_SECRET` at 23:50 Asia/Kolkata. This is required on Render free because the web service can sleep, so an in-process timer is not reliable. The app still queues due summaries and can retry pending jobs; set `ENABLE_INTERNAL_SUMMARY_WORKER=true` only on always-on hosting. SMTP acceptance is not proof of inbox delivery. Delayed summaries use historical attendance totals but current status counts.
-
+Configure `CRON_SECRET` in production and trigger `POST /api/cron/maintenance` from an external scheduler. This endpoint does not send email. It wakes the Render free service, runs attendance reconciliation such as class auto-close/leave return/weekoff transitions, and clears expired sessions. This is useful on Render free because the web service can sleep and in-process timers are not reliable while sleeping.
 
 ### External cron setup
 
 Create a long random `CRON_SECRET` in Render. Then configure cron-job.org, GitHub Actions or another scheduler:
 
-- Daily summary: `POST https://aez-live.onrender.com/api/cron/daily-summary`
+- Maintenance URL: `POST https://aez-live.onrender.com/api/cron/maintenance`
 - Header: `Authorization: Bearer YOUR_CRON_SECRET`
-- Schedule: every day at 23:50 Asia/Kolkata
+- Schedule: every 10-15 minutes while the team is actively using the app, or at least during working hours
 
-Optional warm-up for Render free cold starts:
+The public health check can also be used for a simple warm-up:
 
 - Warm health check: `GET https://aez-live.onrender.com/health`
-- Schedule: every 10-15 minutes while the team is actively using the app
 
-Use `GET /api/cron/smtp-check` with the same bearer token to verify SMTP connectivity without sending a summary.
 ## Fresh start and old data
 
 This deployment starts with a clean database. Do not import old Google Sheet attendance into the new production database. Seed the administrator with `ADMIN_EMAILS`, then use the admin-only Users screen to register employees and educators before they sign in with Google. The `npm run import` command is kept only as a legacy utility for separate experiments or archives; it is not part of the production start.

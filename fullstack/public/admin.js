@@ -81,9 +81,8 @@ async function openReports() {
             status.textContent='System status loaded';
             document.getElementById('reportResults').innerHTML=`<div class="quick-summary-grid">
                 <div><span>Database</span><strong>${escapeHtml(s.database)}</strong><small>Supabase</small></div>
-                <div><span>SMTP</span><strong>${s.smtpConfigured?'Ready':'Missing'}</strong><small>Email config</small></div>
+                <div><span>Cron</span><strong>${s.cronConfigured?'Ready':'Missing'}</strong><small>Maintenance</small></div>
                 <div><span>Users</span><strong>${s.users}</strong><small>${s.admins} admin</small></div>
-                <div><span>Pending Mail</span><strong>${s.pendingMail}</strong><small>jobs</small></div>
             </div>`;
         } catch(e){status.textContent=e.message;}
     }

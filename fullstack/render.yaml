@@ -23,19 +23,5 @@ services:
         sync: false
       - key: ADMIN_EMAILS
         sync: false
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_PORT
-        value: 587
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: MAIL_FROM
-        sync: false
-      - key: SUMMARY_RECIPIENTS
-        sync: false
       - key: CRON_SECRET
         sync: false
-      - key: ENABLE_INTERNAL_SUMMARY_WORKER
-        value: false

@@ -6,7 +6,7 @@ import ExcelJS from 'exceljs';
 import { fileURLToPath } from 'node:url';
 import { fail, recordTransition, saveChange, undo, reconcile } from './domain.js';
 import { report, csv, safeCell, sheetRows, monthlySummary } from './reports.js';
-import { sendDailySummary, verifyMailer } from './worker.js';
+import { runMaintenance } from './worker.js';
 
 export const hash = value => createHash('sha256').update(value).digest('hex');
 const uuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value || '');
@@ -28,25 +28,13 @@ export function createApp(db, config = {}) {
   app.use(express.json({limit:'8mb',type:['application/json','text/plain']}));
   app.get('/api/config', (req,res) => res.json({googleClientId:clientId}));
   app.get('/health', async (req,res) => { await db.query('SELECT 1'); res.json({status:'ok',service:'aez-live'}); });
-  app.post('/api/cron/daily-summary', rateLimit({windowMs:60000,limit:10}), async (req,res) => {
+  app.post('/api/cron/maintenance', rateLimit({windowMs:60000,limit:20}), async (req,res) => {
     const expected = process.env.CRON_SECRET;
     const bearer = req.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1];
     const provided = bearer || req.get('x-cron-secret') || req.query.secret;
     if (!expected || provided !== expected) fail('Cron access denied.',403);
-    const now = new Date();
-    const day = typeof req.query.day === 'string' ? req.query.day : undefined;
-    const force = req.query.force === 'true';
-    const result = await sendDailySummary(db,{day,now,force});
-    res.status(result.status === 'error' ? 502 : 200).json({status:result.status,...result,error:result.error});
-  });
-
-  app.get('/api/cron/smtp-check', async (req,res) => {
-    const expected = process.env.CRON_SECRET;
-    const bearer = req.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1];
-    const provided = bearer || req.get('x-cron-secret') || req.query.secret;
-    if (!expected || provided !== expected) fail('Cron access denied.',403);
-    const result = await verifyMailer();
-    res.status(result.ok ? 200 : 502).json({status:result.ok?'success':'error',...result});
+    const result = await runMaintenance(db,new Date());
+    res.json({...result,service:'aez-live'});
   });
   app.post('/api/auth/google', rateLimit({windowMs:60000,limit:20}), async (req,res) => {
     if (typeof req.body.credential !== 'string') fail('Google credential is required.');
@@ -142,16 +130,11 @@ export function createApp(db, config = {}) {
     const users=Number((await db.query('SELECT count(*) AS count FROM users WHERE enabled=true')).rows[0].count);
     const admins=Number((await db.query('SELECT count(*) AS count FROM users WHERE admin=true AND enabled=true')).rows[0].count);
     const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-    const pendingMail=Number((await db.query("SELECT count(*) AS count FROM mail_jobs WHERE state='pending'")).rows[0].count);
     res.json({status:'success',data:{
       database:'ok',
-      smtpConfigured:!!(process.env.SMTP_HOST&&(process.env.MAIL_FROM||process.env.SMTP_USER)),
       cronConfigured:!!process.env.CRON_SECRET,
-      internalSummaryWorker:process.env.ENABLE_INTERNAL_SUMMARY_WORKER==='true',
-      summaryRecipientsConfigured:!!(process.env.SUMMARY_RECIPIENTS||admins),
       admins,
       users,
-      pendingMail,
       today
     }});
   });

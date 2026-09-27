@@ -119,13 +119,12 @@ test('admin exports return real CSV and XLSX; formula cells are escaped',async()
   assert.equal(xlsxRes.status,200);assert.equal(Buffer.from(await xlsxRes.arrayBuffer()).subarray(0,2).toString(),'PK');
   assert.match(csv([{name:'=SUM(1,2)'}]),/'=SUM/);
 });
-test('daily summary is queued at 23:50 IST, sent once and retryable',async()=>{
-  let sent=0;const mailer={sendMail:async()=>{sent++;}};
-  const now=new Date('2026-09-18T18:20:00Z');
-  await tick(db,now,mailer);await tick(db,new Date(+now+60000),mailer);
-  assert.equal(sent,1);
-  await tick(db,new Date('2026-09-19T18:20:00Z'),{sendMail:async()=>{throw new Error('Test SMTP failure');}});
-  const job=(await db.query("SELECT * FROM mail_jobs WHERE day='2026-09-19'")).rows[0];
-  assert.equal(job.state,'pending');assert.equal(job.attempts,1);
-  await tick(db,new Date('2026-09-19T18:26:00Z'),mailer);assert.equal(sent,2);
+test('cron maintenance clears expired sessions without sending email jobs',async()=>{
+  const u=await user();
+  await db.query("UPDATE sessions SET expires_at=$1 WHERE email=$2",[new Date('2026-09-18T00:00:00Z'),u.email]);
+  const result=await tick(db,new Date('2026-09-19T00:00:00Z'));
+  assert.equal(result.status,'success');
+  assert.equal(result.cleanedSessions,1);
+  assert.equal(Number((await db.query('SELECT count(*) AS count FROM sessions WHERE email=$1',[u.email])).rows[0].count),0);
+  assert.equal(Number((await db.query('SELECT count(*) AS count FROM mail_jobs')).rows[0].count),0);
 });
