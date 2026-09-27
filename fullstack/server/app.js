@@ -177,7 +177,9 @@ export function createApp(db, config = {}) {
     });
     res.json({status:'success',message:'User saved'});
   });
-  app.use(express.static(fileURLToPath(new URL('../public',import.meta.url))));
+  app.use(express.static(fileURLToPath(new URL('../public',import.meta.url)),{setHeaders:(res,path)=>{
+    if (/\.(html|js|css)$/i.test(path)) res.set('Cache-Control','no-store');
+  }}));
   app.use((err,req,res,next)=>{
     if(!err.status)console.error(err);
     res.status(err.status||500).json({status:'error',message:err.status?err.message:'Server error. Please try again.'});
