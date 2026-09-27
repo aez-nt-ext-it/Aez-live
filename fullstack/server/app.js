@@ -17,6 +17,7 @@ export function createApp(db, config = {}) {
   const clientId = process.env.GOOGLE_CLIENT_ID || '178807966999-j9p2ub2kimt46avtqsplm7jc20t9b5k4.apps.googleusercontent.com';
   const google = new OAuth2Client(clientId);
   app.disable('x-powered-by');
+  app.set('trust proxy', 1);
   app.use((req,res,next) => {
     res.set('X-Content-Type-Options','nosniff'); res.set('Referrer-Policy','same-origin');
     res.set('X-Frame-Options','DENY');
