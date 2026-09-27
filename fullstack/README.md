@@ -27,7 +27,7 @@ Reports include quick Today / This Month cards, employee-specific monthly summar
 ## Attendance rules
 
 - Multiple work sessions are summed; break time is excluded. Sessions crossing midnight split at Asia/Kolkata midnight for reports.
-- Teacher classes close at 60 minutes plus a three-minute response window, recording the scheduled 60-minute end time. One extension, requested during that window, changes the deadline to 90 minutes. Extended classes close at 90 minutes without another grace period. A worker checks every 15 seconds and catches up after restarts.
+- Teacher classes close at 60 minutes plus a three-minute response window, recording the scheduled 60-minute end time. One extension, requested during that window, changes the deadline to 90 minutes. Extended classes close at 90 minutes without another grace period. A worker checks periodically and catches up after restarts.
 - Manual end during the grace window records the real end time. Employee sessions are never automatically shortened; missing logout stays open for review.
 - Leave begins today and resumes on the selected date. Early return requires admin approval; approval restores Offline so the user can explicitly start work/class.
 - Tomorrow's weekoff is scheduled without stopping today's work; it activates when the user is Offline on that date.
@@ -36,8 +36,23 @@ Reports include quick Today / This Month cards, employee-specific monthly summar
 
 ## Email and jobs
 
-Configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS and MAIL_FROM. SUMMARY_RECIPIENTS overrides the enabled admin recipient list. At 23:50 Asia/Kolkata the running server queues a daily summary. Pending jobs retry every five minutes. Server and PostgreSQL must be always on; ordinary free hosting that sleeps cannot guarantee timely jobs. SMTP acceptance is not proof of inbox delivery. An SMTP send followed by a database commit failure can produce a retry duplicate; message IDs are stable but provider deduplication is not guaranteed. Delayed summaries use historical attendance totals but current status counts.
+Configure SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS and MAIL_FROM. SUMMARY_RECIPIENTS overrides the enabled admin recipient list. Production daily summaries should be triggered by an external cron calling `POST /api/cron/daily-summary` with `Authorization: Bearer $CRON_SECRET` at 23:50 Asia/Kolkata. This is required on Render free because the web service can sleep, so an in-process timer is not reliable. The app still queues due summaries and can retry pending jobs; set `ENABLE_INTERNAL_SUMMARY_WORKER=true` only on always-on hosting. SMTP acceptance is not proof of inbox delivery. Delayed summaries use historical attendance totals but current status counts.
 
+
+### External cron setup
+
+Create a long random `CRON_SECRET` in Render. Then configure cron-job.org, GitHub Actions or another scheduler:
+
+- Daily summary: `POST https://aez-live.onrender.com/api/cron/daily-summary`
+- Header: `Authorization: Bearer YOUR_CRON_SECRET`
+- Schedule: every day at 23:50 Asia/Kolkata
+
+Optional warm-up for Render free cold starts:
+
+- Warm health check: `GET https://aez-live.onrender.com/health`
+- Schedule: every 10-15 minutes while the team is actively using the app
+
+Use `GET /api/cron/smtp-check` with the same bearer token to verify SMTP connectivity without sending a summary.
 ## Fresh start and old data
 
 This deployment starts with a clean database. Do not import old Google Sheet attendance into the new production database. Seed the administrator with `ADMIN_EMAILS`, then use the admin-only Users screen to register employees and educators before they sign in with Google. The `npm run import` command is kept only as a legacy utility for separate experiments or archives; it is not part of the production start.

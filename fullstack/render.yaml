@@ -35,3 +35,7 @@ services:
         sync: false
       - key: SUMMARY_RECIPIENTS
         sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: ENABLE_INTERNAL_SUMMARY_WORKER
+        value: false

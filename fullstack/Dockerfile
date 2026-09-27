@@ -11,4 +11,4 @@ WORKDIR /app
 COPY --from=build --chown=node:node /app ./
 USER node
 EXPOSE 3100
-CMD ["node", "server/index.js"]
+CMD ["sh", "-c", "npm run seed && node server/index.js"]
